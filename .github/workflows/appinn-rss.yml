@@ -1,12 +1,12 @@
-name: v2ex-hot
+name: appinn-rss
 
 on:
   schedule:
-  - cron: "30 15 * * *"
+  - cron: "30 15 * * 0,4"
   workflow_dispatch:
 
 jobs:
-  v2ex-hot:
+  appinn-rss:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -17,6 +17,6 @@ jobs:
         run: npm ci
         working-directory: .
       - name: fetch data
-        run: node src/actions/v2ex-hot.js
+        run: node src/actions/appinn-rss.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

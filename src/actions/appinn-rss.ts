@@ -1,13 +1,15 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { Octokit } from '@octokit/action';
+
 const octokit = new Octokit();
-const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+const [owner, repo] = process.env.GITHUB_REPOSITORY!.split('/');
+
 const fetchData = async () => {
-    const list = [];
+    const list: { title: string; link: string; description: string; pubDate: string; guid: string }[] = [];
     try {
         console.log('start fetching list');
-        let res = await axios.get('https://www.zhihu.com/rss', {
+        let res = await axios.get('https://feeds.appinn.com/appinns/', {
             headers: {
                 Accept: 'application/xml'
             }
@@ -15,7 +17,7 @@ const fetchData = async () => {
         if (res.data) {
             let data = res.data.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&');
             const $ = await cheerio.load(data, { xmlMode: true });
-            $('rss channel item').each((a, b) => {
+            $('rss channel item').each((a: any, b: any) => {
                 const title = $(b).find('title').text();
                 const link = $(b).find('link').text();
                 const description = $(b).find('description').text().substring(0, 1000);
@@ -25,22 +27,21 @@ const fetchData = async () => {
                     list.push({ title, link, description, pubDate, guid });
                 }
             });
-        }
-        else {
+        } else {
             console.warn('get html error');
         }
-    }
-    catch (e) {
+    } catch (e) {
         console.warn(e);
     }
     return list;
 };
-const run = async (date) => {
+
+const run = async (date: Date) => {
     console.log(date);
     let res = await fetchData();
-    let title = date.toISOString().substring(0, 10) + ' Zhihu RSS';
-    let labels = ['zhihu'];
-    let body = `知乎每日精选 ${date.toISOString().substring(0, 10)} 更新`;
+    let title = date.toISOString().substring(0, 10) + ' Appinn RSS';
+    let labels = ['appinn'];
+    let body = `小众软件RSS ${date.toISOString().substring(0, 10)} 更新`;
     const { data } = await octokit.issues.create({ owner, repo, title, body, labels });
     console.log(data);
     let issue_number = data.number;
@@ -53,7 +54,7 @@ const run = async (date) => {
         await octokit.issues.createComment({ owner, repo, issue_number, body });
     }
 };
+
 run(new Date()).catch((err) => {
     throw err;
 });
-//# sourceMappingURL=zhihu-rss.js.map
